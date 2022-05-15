@@ -15,7 +15,7 @@ vector<int> name_test_var;
 //figures out the cost of the state
 //currently random number is
 int evaluation_function(){
-    int max_num = 10;
+    int max_num = 100;
     int temp = rand() % max_num;
     if(temp > test_var){
         test_var = temp;
@@ -46,18 +46,6 @@ Node *new_root_node()
     return temp;
 }
 
-/*
-//tests if the names are the same
-//currently doesn't account for names with different order of states
-bool check_name(vector<int> test, vector<int> target){
-    if(test.size() != target.size())
-        return false;
-    for(int i = 0; i < test.size(); i++){
-        if(test[i] != target[i])
-            return false;
-    }
-    return true;
-}*/
 void print_node(Node * node){
     cout << "Node name is: ";
     for(int i = 0; i < node->name.size(); i++){
@@ -126,15 +114,7 @@ void forward_selection(int num_features){
             //print_node(new_child);
         }
         temp = target;
-       /* //looks though the new list of features and figures out which has the most cost
-        for(int k = 0; k < temp->child.size(); k++){
-            int cost = temp->child[k]->cost;
-            if(cost > most_cost){
-                most_cost = cost;
-                most_pos = k;
-                temp = temp->child[k];
-            }
-        }*/
+
         //if we didn't find a new node with a better cost then this is the best one
         //for the algorithm
         if(cost_temp == most_cost ){
@@ -151,9 +131,56 @@ void forward_selection(int num_features){
 
 
 }
+void backward_elimination(int num_features){
+    test_var = INT_MIN;//resets the testing max value
+    vector <int> root_name;
+    int most_cost;
+    Node * target_node;
+    vector<int>::iterator it;
+
+    for(int i = 0; i < num_features; i++){
+        root_name.push_back(i + 1);
+    }
+
+    Node * root = new_node(root_name);
+    most_cost = root->cost;
+    target_node = root;
+    int cost_temp;//This will be used to check if there in no child with a better value
+    vector<int> name_temp;
+    while(1){
+        cost_temp = most_cost;
+        name_temp = target_node->name;
+        //creating the child nodes of the target node
+        for(int j = 0; j < name_temp.size() ; j++){
+            //removes a feature 
+            it = name_temp.begin() + j;
+            name_temp.erase(it);
+            //creates the node with that less feature and puts it as a child
+            target_node->child.push_back(new_node(name_temp));
+            //reset temp variable to make sure we are only removing one feature at a time
+            name_temp = target_node->name;
+        }
+        vector<Node *> children = target_node->child;
+        //If there is a new node that has better accuracy then that node becomes
+        //the target node
+        for(int k = 0; k < children.size(); k++){
+            int cur_cost = children[k]->cost;
+            if(cur_cost > most_cost){
+                most_cost = cur_cost;
+                target_node = children[k];
+            }
+        }
+
+        if(cost_temp == most_cost)
+            break;
+    }
+    bool results;
+    results = most_cost == test_var ? true : false;
+    cout << "Test results " << results << endl;
+}
 int main(){
     srand(time(0));
     for(int k = 0; k < 10; k++){
-        forward_selection(4);
+        backward_elimination(4);
     }
 }
