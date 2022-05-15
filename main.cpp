@@ -10,10 +10,18 @@
 #include <cstdlib>
 using namespace std;
 
-int evaluation_function();
 int test_var = INT_MIN;
 vector<int> name_test_var;
-
+//figures out the cost of the state
+//currently random number is
+int evaluation_function(){
+    int max_num = 10;
+    int temp = rand() % max_num;
+    if(temp > test_var){
+        test_var = temp;
+    }
+    return temp;
+}
 //for making the tree with any amount of leaves per node
 struct Node
 {
@@ -37,16 +45,7 @@ Node *new_root_node()
     temp->cost = INT_MAX;
     return temp;
 }
-//figures out the cost of the state
-//currently random number is
-int evaluation_function(){
-    int max_num = 10;
-    int temp = rand() % max_num;
-    if(temp > test_var){
-        test_var = temp;
-    }
-    return temp;
-}
+
 /*
 //tests if the names are the same
 //currently doesn't account for names with different order of states
@@ -59,23 +58,33 @@ bool check_name(vector<int> test, vector<int> target){
     }
     return true;
 }*/
-
+void print_node(Node * node){
+    cout << "Node name is: ";
+    for(int i = 0; i < node->name.size(); i++){
+        cout << node->name[i];
+    }
+    cout << endl;
+    cout << "The cost of it is: " << node->cost << endl;
+    cout << endl;
+}
 void forward_selection(int num_features){
+    test_var = INT_MIN;//resets the testing max value
     vector<Node *> base_features;
-    vector<Node *> new_features;
-    vector<Node *> new_features_temp;
     vector<int> temp_name {0};
     Node *root = new_root_node();
     Node *temp;//the current node we are looking at
-    int i, most_cost = INT_MIN, most_pos;
-    //first loop for all the base_features;
-    for(i = 0; i < num_features; i++){
+    int most_cost = INT_MIN, most_pos;
+    //first loop and make all the base features
+    for(int i = 0; i < num_features; i++){
         temp_name[0] = i + 1;
         temp = new_node(temp_name);
         base_features.push_back(temp);
         root->child.push_back(temp);
+
+        //print_node(temp);
     }
-    for(i = 0; i < base_features.size(); i ++){
+    //find the feature that has the best cost and make it the state we are looking at
+    for(int i = 0; i < base_features.size(); i ++){
         if(base_features[i]->cost > most_cost){
             most_cost = base_features[i]->cost;
             temp = base_features[i];
@@ -88,41 +97,63 @@ void forward_selection(int num_features){
     vector<Node *>::iterator it = base_features.begin() + most_pos;
     base_features.erase(it);
 
-    new_features = base_features;
     vector<int> name_temp;
     int cost_temp;//This will be used to check if there in no child with a better value
     while(1){
         cost_temp = most_cost;
-        //creates the new child states from the current node we are looking at
-        for(i = 0; i < new_features.size(); i ++){
-            name_temp = temp->name;
-            name_temp.push_back(new_features[i]->name[0]);
-            new_features_temp.push_back(new_node(name_temp));
-            //garbage collection
-            name_temp.clear();
-            name_temp.shrink_to_fit();
-        }
-        new_features = new_features_temp;
-        //garbage collection
-        new_features_temp.clear();
-        new_features_temp.shrink_to_fit();
-        //looks though the new list of features and figures out which has the most cost
-        for(i = 0; i < new_features.size(); i ++){
-            if(new_features[i]->cost > most_cost){
-                most_cost = base_features[i]->cost;
-                most_pos = i;
-                temp = base_features[i];
+        //removes feature that is already in the current state we are looking at
+        for(int i = 0; i < base_features.size(); i ++){
+            for(int j = 0; j < temp->name.size(); j++){
+                if(base_features[i]->name[0] == temp->name[j]){
+                    it = base_features.begin() + i;
+                    base_features.erase(it);
+                }
             }
         }
-        //if our current node is the most then we found the best one
-        if(cost_temp == most_cost)
-            break;        
+        Node * new_child;
+        Node * target;
+        //creates the new child states from the current node we are looking at
+        for(int i = 0; i < base_features.size(); i ++){
+            name_temp = temp->name;
+            name_temp.push_back(base_features[i]->name[0]);
+            new_child = new_node(name_temp);
+            temp->child.push_back(new_child);
+
+            if(new_child->cost > most_cost){
+                most_cost = new_child->cost;
+                target = new_child;
+            }
+            //print_node(new_child);
+        }
+        temp = target;
+       /* //looks though the new list of features and figures out which has the most cost
+        for(int k = 0; k < temp->child.size(); k++){
+            int cost = temp->child[k]->cost;
+            if(cost > most_cost){
+                most_cost = cost;
+                most_pos = k;
+                temp = temp->child[k];
+            }
+        }*/
+        //if we didn't find a new node with a better cost then this is the best one
+        //for the algorithm
+        if(cost_temp == most_cost ){
+            //cout << base_features.size() << endl;
+            break; 
+        }
+     
     }
-    cout << "most cost from algorithm: " << most_cost << endl;
-    cout << "most cost from all nodes made: " << test_var << endl;
-    cout << endl;
+    bool results;
+    results = most_cost == test_var ? true : false;
+    cout << "Test results " << results << endl;
+   // cout << "current most: " << most_cost << endl;
+   // cout << "overall most: " << test_var << endl;
+
+
 }
 int main(){
     srand(time(0));
-    forward_selection(4);
+    for(int k = 0; k < 10; k++){
+        forward_selection(4);
+    }
 }
