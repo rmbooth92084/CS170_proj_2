@@ -12,17 +12,83 @@ using namespace std;
 
 int test_var = INT_MIN;
 vector<int> name_test_var;
+vector<vector<double>> data_set {
+        {1 ,0.01 , 0.02 ,0.02},
+        {2 ,0.01 , 0.01 ,0.03},
+        {1 ,0.02 , 0.03 ,0.02},
+        {1 ,0.03 , 0.02 ,0.02},
+        {2 ,0.05 , 0.01 ,0.05}
+};
+//calculates the starting accuracy of the test without alrgorithm
+//works with up to 4 different clasifacitons
+double default_accuracy(vector<vector<double>> input){
+    vector<int> count{0,0,0,0};
+    int highest_clasif;
+    int current_most = 0;
+    for(int i = 0; i < input.size(); i++){
+        count[input[i][0]]++;
+    }
+    for(int j = 0; j < count.size(); j++){
+        if(count[j] > current_most) {
+            current_most = count[j];
+            highest_clasif = j;
+        }
+    }
+
+    return current_most / (double)input.size();
+}
+//calculates the uclidian distance
+double euclidean_distance(double x1, double y1, double x2, double y2){
+    double result = pow(pow(x1 - x2, 2) + pow(y1 - y2, 2), 0.5);
+    return result;
+}
 
 //figures out the cost of the state
-//currently random number is
-int evaluation_function(){
-    int max_num = 100;
-    int temp = rand() % max_num;
-    if(temp > test_var){
-        test_var = temp;
+
+double evaluation_function(vector<int> features){
+    int nearest_pos = -1;
+    double nearest_dist = INT_MAX;
+    double current_dist = 0;
+    vector<double> temp[2];
+    int temp_feature, num_correct = 0;
+    //NN algorithm
+    for(int i = 0; i < data_set.size(); i++){
+        temp[0] = data_set[i];
+        nearest_pos = -1;
+        nearest_dist = INT_MAX;
+        for (int j = 0; j < data_set.size(); j++){
+            //if it's comparing the distance between itself and itself then skip
+            if(i == j)
+                continue;
+            temp[1] = data_set[j];
+            //gets the distance between the target instance and the other instace before square rooting it
+            for(int k = 0; k < features.size(); k++){
+                temp_feature = features[k];
+                //preps for a variable amount of features to cal the distance
+                current_dist += pow(temp[0][temp_feature] - temp[1][temp_feature], 2.0);
+            }
+            
+            //take the square root of the calculation to find the distance between the points
+            current_dist = pow(current_dist, 0.5);
+            if(current_dist < nearest_dist){
+                nearest_dist = current_dist;
+                nearest_pos = j;
+            }
+            
+        }
+      //  cout << "Nearest neighbor for instance " << i << " is " << nearest_pos 
+      //  << " at a distance of : " << nearest_dist << endl;
+        //if the clasifaciton of the nearest neighbor is the same as the test node then
+        //we add one to the num correct
+        if(temp[0][0] == data_set[nearest_pos][0]){
+            num_correct++;
+            cout << "success" << endl;
+        }
     }
-    return temp;
+
+    return (double)num_correct / (double) data_set.size();
 }
+
 //for making the tree with any amount of leaves per node
 struct Node
 {
@@ -35,7 +101,7 @@ Node *new_node(vector<int> input_name)
 {
     Node *temp = new Node;
     temp->name = input_name;
-    temp->cost = evaluation_function();
+    temp->cost = evaluation_function(input_name);
     return temp;
 }
 //function for helping with creating the root node
@@ -57,13 +123,13 @@ void print_node(Node * node){
     cout << " accuracy is: " << node->cost << endl;
     cout << endl;
 }
-int forward_selection(int num_features){
+double forward_selection(int num_features){
     test_var = INT_MIN;//resets the testing max value
     vector<Node *> base_features;
     vector<int> temp_name {0};
     Node *root = new_root_node();
     Node *temp;//the current node we are looking at
-    int most_cost = INT_MIN, most_pos;
+    double most_cost = INT_MIN, most_pos;
     //first loop and make all the base features
     for(int i = 0; i < num_features; i++){
         temp_name[0] = i + 1;
@@ -88,7 +154,7 @@ int forward_selection(int num_features){
     base_features.erase(it);
 
     vector<int> name_temp;
-    int cost_temp;//This will be used to check if there in no child with a better value
+    double cost_temp;//This will be used to check if there in no child with a better value
     while(1){
         cost_temp = most_cost;
         //removes feature that is already in the current state we are looking at
@@ -135,10 +201,10 @@ int forward_selection(int num_features){
 
 
 }
-int backward_elimination(int num_features){
+double backward_elimination(int num_features){
     test_var = INT_MIN;//resets the testing max value
     vector <int> root_name;
-    int most_cost;
+    double most_cost;
     Node * target_node;
     vector<int>::iterator it;
 
@@ -191,7 +257,7 @@ int backward_elimination(int num_features){
     cout << "Test results " << results << endl;*/
 }
 void ui(){
-    int accuracy, start_acc = evaluation_function();
+    double accuracy, start_acc = default_accuracy(data_set);
     cout << "Welcome to Raymond Booth's Feature Seleciton Algorithm" << endl
          << "Please enter the number of features you want: ";
     int user_features_input;
@@ -235,5 +301,7 @@ int main(){
     for(int k = 0; k < 5; k++){
         forward_selection(4);
     }*/
+    
+
     ui();
 }
