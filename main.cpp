@@ -216,16 +216,18 @@ double backward_elimination(int num_features){
     print_node(root);
     most_cost = root->cost;
     target_node = root;
-    int cost_temp;//This will be used to check if there in no child with a better value
+    double cost_temp;//This will be used to check if there in no child with a better value
     vector<int> name_temp;
     while(1){
         cost_temp = most_cost;
         name_temp = target_node->name;
         Node * node_temp;
-        //creating the child nodes of the target node
-        for(int j = 0; j < name_temp.size() ; j++){
+        int num_children = name_temp.size();
+        //creating all the child nodes of the target node
+        for(int j = 0; j < num_children; j++){
             //removes a feature 
             it = name_temp.begin() + j;
+            //removes it to make a new node with one less feature
             name_temp.erase(it);
             node_temp = new_node(name_temp);
             //creates the node with that less feature and puts it as a child
@@ -239,7 +241,7 @@ double backward_elimination(int num_features){
         //If there is a new node that has better accuracy then that node becomes
         //the target node
         for(int k = 0; k < children.size(); k++){
-            int cur_cost = children[k]->cost;
+            double cur_cost = children[k]->cost;
             if(cur_cost > most_cost){
                 most_cost = cur_cost;
                 target_node = children[k];
