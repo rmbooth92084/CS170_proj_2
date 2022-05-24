@@ -8,17 +8,19 @@
 #include <cmath>
 #include <climits>
 #include <cstdlib>
+#include <fstream>
 using namespace std;
 
 int test_var = INT_MIN;
 vector<int> name_test_var;
-vector<vector<double>> data_set {
+vector<vector<double>> data_set; 
+/*vector<vector<double>> data_set {
         {1 ,0.01 , 0.02 ,0.02},
         {2 ,0.01 , 0.01 ,0.03},
         {1 ,0.02 , 0.03 ,0.02},
         {1 ,0.03 , 0.02 ,0.02},
         {2 ,0.05 , 0.01 ,0.05}
-};
+};*/
 //calculates the starting accuracy of the test without alrgorithm
 //works with up to 4 different clasifacitons
 double default_accuracy(vector<vector<double>> input){
@@ -82,7 +84,7 @@ double evaluation_function(vector<int> features){
         //we add one to the num correct
         if(temp[0][0] == data_set[nearest_pos][0]){
             num_correct++;
-            cout << "success" << endl;
+            //cout << "success" << endl;
         }
     }
 
@@ -121,7 +123,6 @@ void print_node(Node * node){
         cout << node->name[i];
     }
     cout << " accuracy is: " << node->cost << endl;
-    cout << endl;
 }
 double forward_selection(int num_features){
     test_var = INT_MIN;//resets the testing max value
@@ -292,18 +293,35 @@ void ui(){
     cout << endl;
 
 }
-int main(){
-    srand(time(0));
-    /*
-    cout << "backwards elemintion random test results (1 pass, 0 fail) :" << endl;
-    for(int k = 0; k < 5; k++){
-        backward_elimination(4);
+//reads in the example data for tests
+void read_in_data(){
+    fstream my_file;
+    //for reading the file
+    my_file.open("Large-test-dataset.txt", ios::in);
+    if(my_file.is_open()){
+        
+        double class_id;
+        vector<double> temp{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+        while(my_file >> class_id){
+            temp[0] = class_id; //puts class id in the 0 position
+            //get all the feature values in the line before getting the name of the next line
+            for(int i=1; i < temp.size(); i++){
+                my_file >> temp[i];
+            }
+            data_set.push_back(temp);
+        }
+        my_file.close();
     }
-    cout << "forward selection random test results (1 pass, 0 fail) :" << endl;
-    for(int k = 0; k < 5; k++){
-        forward_selection(4);
-    }*/
-    
-
+    else{
+        cout << "Failed to read file" << endl;
+    }
+    /*
+    for(int i = 0; i < data_set.size(); i++){
+        cout << data_set[i][0]  << " "<< data_set[i][1] << endl;
+    }
+    */
+}
+int main(){
+    read_in_data();
     ui();
 }
