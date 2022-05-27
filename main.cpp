@@ -11,9 +11,10 @@
 #include <fstream>
 using namespace std;
 
-int test_var = INT_MIN;
-vector<int> name_test_var;
-vector<vector<double>> data_set; 
+int test_var = INT_MIN;//debuigging variable
+vector<int> name_test_var;//debugging variable
+bool large;
+vector<vector<double>> data_set; //global variable for dealing with testing data
 /*vector<vector<double>> data_set {
         {1 ,0.01 , 0.02 ,0.02},
         {2 ,0.01 , 0.01 ,0.03},
@@ -21,6 +22,32 @@ vector<vector<double>> data_set;
         {1 ,0.03 , 0.02 ,0.02},
         {2 ,0.05 , 0.01 ,0.05}
 };*/
+double standard_deviation(double mean, double num_features, int feature){
+    int i, j;
+    double result = 0, sum = 0, size = data_set.size();
+    for(j = 0; j < size; j++){
+        sum += pow(data_set[j][feature] - mean, 2);
+    }
+    sum /= size - 1;
+    result = pow(sum, 0.5);
+    return result;
+}
+void normalize(){
+    double mean = 0;;
+    double deviation;
+    int i, j, num_features = data_set[0].size() - 1;
+    //has is start calculating the mean of the first feature
+    for(i = 1; i <= num_features; i++){
+        for(j = 0; j < data_set.size(); j++){
+            mean += data_set[j][i];
+        }
+        deviation = standard_deviation(mean, num_features, i);
+        //this normalizes the features after calculating the SD and mean of that funciton
+        for(j = 0; j < data_set.size(); j++){
+            data_set[j][i] = (data_set[j][i] - mean) / deviation;
+        }
+    }
+}
 //calculates the starting accuracy of the test without alrgorithm
 //works with up to 4 different clasifacitons
 double default_accuracy(vector<vector<double>> input){
@@ -39,21 +66,15 @@ double default_accuracy(vector<vector<double>> input){
 
     return current_most / (double)input.size();
 }
-//calculates the uclidian distance
-double euclidean_distance(double x1, double y1, double x2, double y2){
-    double result = pow(pow(x1 - x2, 2) + pow(y1 - y2, 2), 0.5);
-    return result;
-}
-
-//figures out the cost of the state
-
+//figures out the cost of the state by using corss-validation with
+//the neariest neighbor algorithm
 double evaluation_function(vector<int> features){
     int nearest_pos = -1;
     double nearest_dist = INT_MAX;
     double current_dist = 0;
     vector<double> temp[2];
     int temp_feature, num_correct = 0;
-    //NN algorithm
+    //NN algorithm with leave one out cross-validation
     for(int i = 0; i < data_set.size(); i++){
         temp[0] = data_set[i];
         nearest_pos = -1;
@@ -114,16 +135,19 @@ Node *new_root_node()
     temp->cost = INT_MAX;
     return temp;
 }
-
+//global variable for getting a pointer on the final node for
+//ui output purposes
 Node * results;
 
 void print_node(Node * node){
     cout << "The feature(s) ";
     for(int i = 0; i < node->name.size(); i++){
-        cout << node->name[i];
+        cout << node->name[i] << " ";
     }
     cout << " accuracy is: " << node->cost << endl;
 }
+//this funciton does forward selection to make a tree of different
+//combonations of features to find a local maximum starting with no features
 double forward_selection(int num_features){
     test_var = INT_MIN;//resets the testing max value
     vector<Node *> base_features;
@@ -202,6 +226,8 @@ double forward_selection(int num_features){
 
 
 }
+//This funciton does backward elimination to make a tree of combonations of
+//features to find a local maximum starting with all the from features
 double backward_elimination(int num_features){
     test_var = INT_MIN;//resets the testing max value
     vector <int> root_name;
@@ -269,8 +295,7 @@ void ui(){
 
     cout << "Please select the alforithm you want to run" << endl
          << "(1) Foward Seleciton" << endl
-         << "(2) Backward Elimination" << endl
-         << "(3) Raymond's Special Algorithm (not made yet)" << endl;
+         << "(2) Backward Elimination" << endl;
     int user_al_input;
     cin >> user_al_input;
     cout << "Using no features, the accuracy is: " << start_acc << endl;
@@ -282,26 +307,37 @@ void ui(){
         accuracy = backward_elimination(user_features_input);
     }
     else{
-        cout << "not implemented yet" << endl;
+        cout << "Invalid input" << endl;
     }
     cout << "out of algorithm" << endl;
 
-    cout << "The best accuracy is: " << accuracy << " on state ";
+    cout << "The best accuracy though the algorithm is: " << accuracy << " on state ";
     for(int i = 0; i <results->name.size(); i++){
-        cout << results->name[i];
+        cout << results->name[i] << " ";
     }
     cout << endl;
 
 }
-//reads in the example data for tests
+//reads in data from a text file to test the algorithms
 void read_in_data(){
     fstream my_file;
+    vector<double> temp;
     //for reading the file
-    my_file.open("Large-test-dataset.txt", ios::in);
+    if(large){
+        my_file.open("CS170_Spring_2022_Large_data__5.txt", ios::in);
+        //temp = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};//for the large data set 
+    }
+    else{
+        my_file.open("CS170_Spring_2022_Small_data__5.txt", ios::in);
+    }
     if(my_file.is_open()){
         
         double class_id;
-        vector<double> temp{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+        if(large)
+            temp = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};//for the large data set 
+        else
+            temp = {0,0,0,0,0,0,0,0,0,0,0};//for the small data set
+        
         while(my_file >> class_id){
             temp[0] = class_id; //puts class id in the 0 position
             //get all the feature values in the line before getting the name of the next line
@@ -322,6 +358,20 @@ void read_in_data(){
     */
 }
 int main(){
+    int temp;
+    cout << "Select data set: (1) Large (2) Small"  << endl;
+    cin >> temp;
+    if(temp == 1)
+        large = true;
+    else if(temp == 2)
+        large = false;
+
     read_in_data();
+
+    cout << "Normalize data? : (1) Normalize (2) Not normalize"  << endl;
+    int temp2;
+    cin >> temp2;
+    if(temp2 == 1)
+        normalize();
     ui();
 }
