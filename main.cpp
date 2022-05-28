@@ -14,6 +14,7 @@ using namespace std;
 int test_var = INT_MIN;//debuigging variable
 vector<int> name_test_var;//debugging variable
 bool large;
+bool uniuqe = true;
 vector<vector<double>> data_set; //global variable for dealing with testing data
 /*vector<vector<double>> data_set {
         {1 ,0.01 , 0.02 ,0.02},
@@ -324,11 +325,16 @@ void read_in_data(){
     vector<double> temp;
     //for reading the file
     if(large){
-        my_file.open("CS170_Spring_2022_Large_data__5.txt", ios::in);
-        //temp = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};//for the large data set 
+        if(uniuqe)
+            my_file.open("CS170_Spring_2022_Large_data__5.txt", ios::in);
+        else
+            my_file.open("Large-test-dataset.txt", ios::in);
     }
     else{
-        my_file.open("CS170_Spring_2022_Small_data__5.txt", ios::in);
+        if(uniuqe)
+            my_file.open("CS170_Spring_2022_small_data__5.txt", ios::in);
+        else
+            my_file.open("small-test-dataset.txt", ios::in);
     }
     if(my_file.is_open()){
         
